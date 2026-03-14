@@ -5,7 +5,7 @@ import subprocess
 
 INTERFACE = scapy.conf.iface.name
 GATEWAY_IP = scapy.conf.route.route("0.0.0.0")[2]
-TARGET_IP = "10.100.102.8" # Target IP address
+TARGET_IP = "0.0.0.0" # Target IP address
 
 tracked_devices = {TARGET_IP}
 device_writers = {}
